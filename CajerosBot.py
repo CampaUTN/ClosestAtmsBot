@@ -1,28 +1,33 @@
 import telegram
 from telegram.ext import *
-import requests, csv, json, geopy.distance, geocoder
+import requests, csv, json, geopy.distance, geocoder, random, os
 
 token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
+MAX_EXTRAC = 1000
+
+consultas = open("consultas.json","a+")
 
 def link(bot, update):
     cajerosLink = select3Nearest("LINK")
     update.message.reply_text(armarStringPantalla(cajerosLink))
     devolverMapa(cajerosLink,bot,update)
+    registrarConsulta(cajerosLink)
 
 def banelco(bot, update):
-    cajerosLink = select3Nearest("BANELCO")
-    update.message.reply_text(armarStringPantalla(cajerosLink))
+    cajerosBanelco = select3Nearest("BANELCO")
+    update.message.reply_text(armarStringPantalla(cajerosBanelco))
+    devolverMapa(cajerosBanelco,bot,update)
+    registrarConsulta(cajerosBanelco)
 
 def devolverMapa(cajeros,bot,update):
     c1 = cajeros[0]["LAT"].replace(",",".") + "," + cajeros[0]["LNG"].replace(",",".")
     c2 = cajeros[1]["LAT"].replace(",",".") + "," + cajeros[1]["LNG"].replace(",",".")
     c3 = cajeros[2]["LAT"].replace(",",".") + "," + cajeros[2]["LNG"].replace(",",".")
 
-    url = '''https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:1%7C{cord1}&markers=color:green%7Clabel:2%7C{cord2}&markers=color:red%7Clabel:3%7C{cord3}
+    url = '''https://maps.googleapis.com/maps/api/staticmap?size=600x300&maptype=roadmap&markers=color:blue%7Clabel:1%7C{cord1}&markers=color:green%7Clabel:2%7C{cord2}&markers=color:red%7Clabel:3%7C{cord3}
             &key=AIzaSyDtFJmOZiEyqegfXU2gY_A2AlrFSCl9C2c'''.format(cord1=c1,cord2=c2,cord3=c3)
 
-    r = requests.get(url)
     bot.send_photo(chat_id=update.message.chat.id, photo=url)
 
 def armarStringPantalla(cajeros):
@@ -33,10 +38,17 @@ def armarStringPantalla(cajeros):
     return ''.join(ret)
 
 def select3Nearest(red):
-    return sorted(calcularDistancias(filtrarRed(red)), key=lambda k: k["DISTANCE"])[:3]
+    return quitarEstimadosVacios(sorted(calcularDistancias(filtrarRed(red)), key=lambda k: k["DISTANCE"]))[:3]
 
 def filtrarRed(tipo):
     return list(filter(lambda d: d["RED"]==tipo,list_dic))
+
+def quitarEstimadosVacios(lista):
+    if os.stat("consultas.json").st_size == 0:    
+        json.dump({"0":0},consultas)
+    consultas.seek(0)
+    datos = json.load(consultas)
+    return list(filter(lambda d: datos.get(d["ID"],0)<MAX_EXTRAC ,lista))
 
 def calcularDistancias(lista):
     myPos = geocoder.ip("me").latlng
@@ -44,6 +56,25 @@ def calcularDistancias(lista):
         posCajero = (float(cajero["LAT"].replace(",",".")), float(cajero["LNG"].replace(",",".") ))
         cajero["DISTANCE"] = geopy.distance.vincenty(myPos, posCajero).km
     return lista
+
+def registrarConsulta(cajeros):
+    r = random.randint(0,100)
+    if r < 70: 
+        sumarExtraccion(cajeros[0])
+    elif r < 90:
+        sumarExtraccion(cajeros[1])
+    else:
+        sumarExtraccion(cajeros[2])
+
+def sumarExtraccion(cajero):
+    if os.stat("consultas.json").st_size == 0:    
+        json.dump({"0":0},consultas)
+    consultas.seek(0)
+    datos = json.load(consultas)
+    consultas.seek(0)
+    datos[cajero["ID"]] = datos.get(cajero["ID"],0)+1
+    with open("consultas.json","w") as new:
+        json.dump(datos,new)
 
 def main():
     updater = Updater(token)
