@@ -5,9 +5,6 @@ import requests, csv, json, geopy.distance, geocoder
 token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
 
-def start(bot, update):
-    update.message.reply_text("asd")
-
 def link(bot, update):
     cajerosLink = select3Nearest("LINK")
     update.message.reply_text(armarStringPantalla(cajerosLink))
@@ -17,7 +14,6 @@ def banelco(bot, update):
     cajerosLink = select3Nearest("BANELCO")
     update.message.reply_text(armarStringPantalla(cajerosLink))
 
-#40.702147,-74.015794
 def devolverMapa(cajeros,bot,update):
     c1 = cajeros[0]["LAT"].replace(",",".") + "," + cajeros[0]["LNG"].replace(",",".")
     c2 = cajeros[1]["LAT"].replace(",",".") + "," + cajeros[1]["LNG"].replace(",",".")
@@ -27,7 +23,7 @@ def devolverMapa(cajeros,bot,update):
             &key=AIzaSyDtFJmOZiEyqegfXU2gY_A2AlrFSCl9C2c'''.format(cord1=c1,cord2=c2,cord3=c3)
 
     r = requests.get(url)
-    bot.send_photo(chat_id=update.chat_id, photo=url)
+    bot.send_photo(chat_id=update.message.chat.id, photo=url)
 
 def armarStringPantalla(cajeros):
     ret = []
@@ -35,12 +31,6 @@ def armarStringPantalla(cajeros):
         line = "{id}. {banco} - {dir} \n".format(id=str(idx+1),banco=c["BANCO"],dir=c["DOM_ORIG"])
         ret.append(line)
     return ''.join(ret)
-
-def getLink():
-    print(select3Nearest("LINK"))
-
-def getBanelco():
-    print(select3Nearest("BANELCO"))
 
 def select3Nearest(red):
     return sorted(calcularDistancias(filtrarRed(red)), key=lambda k: k["DISTANCE"])[:3]
@@ -59,7 +49,6 @@ def main():
     updater = Updater(token)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("link", link))
-    dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("banelco", banelco))
     updater.start_polling()
 
