@@ -1,12 +1,18 @@
 import telegram
 from telegram.ext import *
-import requests, csv, json, geopy.distance, geocoder, random, os
+import requests, csv, json, geopy.distance, geocoder, random, os, os.path, time
 
 token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
 MAX_EXTRAC = 1000
+MY_COORD = ""
+HORAS_ENTRE_ACTU = 24
 
 consultas = open("consultas.json","a+")
+
+def me(bot,update):
+    myPos = geocoder.ip("me").latlng
+    update.message.reply_text(myPos)
 
 def link(bot, update):
     cajerosLink = select3Nearest("LINK")
@@ -23,10 +29,11 @@ def banelco(bot, update):
 def devolverMapa(cajeros,bot,update):
     c1 = cajeros[0]["LAT"].replace(",",".") + "," + cajeros[0]["LNG"].replace(",",".")
     c2 = cajeros[1]["LAT"].replace(",",".") + "," + cajeros[1]["LNG"].replace(",",".")
-    c3 = cajeros[2]["LAT"].replace(",",".") + "," + cajeros[2]["LNG"].replace(",",".")
+    c3 = cajeros[2]["LAT"].replace(",",".") + "," + cajeros[2]["LNG"].replace(",",".")  
+    tu = MY_COORD if MY_COORD!="" else ''.join(map(str,geocoder.ip("me").latlng))
 
-    url = '''https://maps.googleapis.com/maps/api/staticmap?size=600x300&maptype=roadmap&markers=color:blue%7Clabel:1%7C{cord1}&markers=color:green%7Clabel:2%7C{cord2}&markers=color:red%7Clabel:3%7C{cord3}
-            &key=AIzaSyDtFJmOZiEyqegfXU2gY_A2AlrFSCl9C2c'''.format(cord1=c1,cord2=c2,cord3=c3)
+    url = '''https://maps.googleapis.com/maps/api/staticmap?size=600x300&maptype=roadmap&markers=color:blue%7Clabel:1%7C{cord1}&markers=color:green%7Clabel:2%7C{cord2}&markers=color:red%7Clabel:3%7C{cord3}&markers=color:yellow%7Clabel:T%7C{tu}
+            &key=AIzaSyDtFJmOZiEyqegfXU2gY_A2AlrFSCl9C2c'''.format(cord1=c1,cord2=c2,cord3=c3,tu=tu)
 
     bot.send_photo(chat_id=update.message.chat.id, photo=url)
 
@@ -81,12 +88,20 @@ def main():
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("link", link))
     dp.add_handler(CommandHandler("banelco", banelco))
+    dp.add_handler(CommandHandler("me", me))
     updater.start_polling()
 
-    #getCsv()
+    if os.stat("cajeros.csv").st_size == 0 or horasDesdeModificacion()>HORAS_ENTRE_ACTU:    
+        getCsv()
+
     csvToDic()
 
     updater.idle()
+
+def horasDesdeModificacion():
+    file_mod_time = os.stat("cajeros.csv").st_mtime
+    should_time = time.time() - (30 * 60)
+    return (file_mod_time - should_time) / 60 / 60 * -1
 
 def getCsv():
     r = requests.get("https://data.buenosaires.gob.ar/api/files/cajeros-automaticos.csv/download/csv") 
