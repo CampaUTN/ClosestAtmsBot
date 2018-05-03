@@ -1,7 +1,6 @@
 import schedule, requests, time, os, json
 
 IMPORTAR_CSV_CADA = 48 #Horas
-REINICIAR_CONSULTAS_CADA = 24 #Horas
 
 def getCsv():
     r = requests.get("https://data.buenosaires.gob.ar/api/files/cajeros-automaticos.csv/download/csv") 
@@ -12,8 +11,13 @@ def reiniciarConsultas():
     with open("consultas.json","w") as f:
         json.dump({"0":0},f)
 
+schedule.every().monday.at("08:00").do(reiniciarConsultas)
+schedule.every().tuesday.at("08:00").do(reiniciarConsultas)
+schedule.every().wednesday.at("08:00").do(reiniciarConsultas)
+schedule.every().thursday.at("08:00").do(reiniciarConsultas)
+schedule.every().friday.at("08:00").do(reiniciarConsultas)
+
 schedule.every(IMPORTAR_CSV_CADA).hours.do(getCsv)
-schedule.every(REINICIAR_CONSULTAS_CADA).hours.do(reiniciarConsultas)
 
 while 1:
     schedule.run_pending()

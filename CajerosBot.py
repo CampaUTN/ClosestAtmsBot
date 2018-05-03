@@ -6,7 +6,7 @@ token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
 MAX_EXTRAC = 1000
 MAX_METROS_BUSQUEDA = 500
-CUSTOM_COORD = "" #Para testear desde otra ubicacion (formato: "-34.581407, -58.440111")
+CUSTOM_COORD = "-34.581600,-58.421050" #Para testear desde otra ubicacion (ejemplo funcional: "-34.581600,-58.421050")
 USER_COORD = "" #Var Global. Seteada al enviar ubicacion
 
 consultas = open("consultas.json","a+")
@@ -46,11 +46,11 @@ def filtrarRed(tipo):
     return list(filter(lambda d: d["RED"]==tipo,list_dic))
 
 def calcularDistancias(lista):
-    myPos = CUSTOM_COORD if CUSTOM_COORD!="" else USER_COORD
+    myPos = list(map(float,(CUSTOM_COORD if CUSTOM_COORD!="" else USER_COORD).split(',')))
 
     for cajero in lista:
-        posCajero = (float(cajero["LAT"].replace(",",".")), float(cajero["LNG"].replace(",",".") ))
-        cajero["DISTANCE"] = geopy.distance.vincenty(myPos, posCajero).km
+        posCajero = float(cajero["LAT"].replace(",",".")), float(cajero["LNG"].replace(",",".") )
+        cajero["DISTANCE"] = geopy.distance.vincenty(myPos,posCajero).km
 
     return lista
 
@@ -125,12 +125,14 @@ def csvToDic():
 
 def ubicacion(bot,update): 
     reply_markup = telegram.ReplyKeyboardMarkup([[telegram.KeyboardButton('Compartir ubicación', request_location=True, one_time_keyboard=True)]])
+    
     bot.sendMessage(update.message.chat.id, "Presiona 'Compartir ubicación' para usar la aplicación", reply_markup=reply_markup)
 
 def location(bot, update):
     global USER_COORD 
     user_location = update.message.location
     USER_COORD = str(user_location.latitude) + "," + str(user_location.longitude)
+
     update.message.reply_text("Gracias por compartir tu ubicación. Puede utilizar los comandos /link y /banelco")
 
 if __name__ == '__main__':
