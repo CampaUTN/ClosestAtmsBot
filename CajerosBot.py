@@ -6,7 +6,7 @@ token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
 MAX_EXTRAC = 1000
 MAX_METROS_BUSQUEDA = 500
-CUSTOM_COORD = "-34.581600,-58.421050" #Para testear desde otra ubicacion (ejemplo funcional: "-34.581600,-58.421050")
+CUSTOM_COORD = "" #Para testear desde otra ubicacion (ejemplo funcional: "-34.581600,-58.421050")
 USER_COORD = "" #Var Global. Seteada al enviar ubicacion
 
 consultas = open("consultas.json","a+")

@@ -1,0 +1,1 @@
+- De no encontrar cajeros cercanos con la ubicación del dispositivo, utilizar la variable global "CUSTOM_COORD" utilizando el valor detallado en el comentario
