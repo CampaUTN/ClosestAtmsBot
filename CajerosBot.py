@@ -5,6 +5,7 @@ import requests, csv, json, geopy.distance, geocoder, random, os, os.path, time,
 token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
 MAX_EXTRAC = 1000
+MAX_METROS_BUSQUEDA = 500
 MY_COORD = "" #Para testear desde otra ubicacion (formato: "-34.581407, -58.440111")
 HORAS_ENTRE_ACTU = 24
 
@@ -15,27 +16,19 @@ def me(bot,update):
     update.message.reply_text(myPos)
 
 def link(bot, update):
-    cajerosLink = select3Nearest("LINK")
-    update.message.reply_text(armarStringPantalla(cajerosLink))
-    devolverMapa(cajerosLink,bot,update)
-    registrarConsulta(cajerosLink)
-
+    manejarCommand(bot, update,"LINK")
+    
 def banelco(bot, update):
-    cajerosBanelco = select3Nearest("BANELCO")
-    update.message.reply_text(armarStringPantalla(cajerosBanelco))
-    devolverMapa(cajerosBanelco,bot,update)
-    registrarConsulta(cajerosBanelco)
-
-def devolverMapa(cajeros,bot,update):
-    c1 = cajeros[0]["LAT"].replace(",",".") + "," + cajeros[0]["LNG"].replace(",",".")
-    c2 = cajeros[1]["LAT"].replace(",",".") + "," + cajeros[1]["LNG"].replace(",",".")
-    c3 = cajeros[2]["LAT"].replace(",",".") + "," + cajeros[2]["LNG"].replace(",",".")  
-    tu = MY_COORD if MY_COORD!="" else ''.join(map(str,geocoder.ip("me").latlng))
-
-    url = '''https://maps.googleapis.com/maps/api/staticmap?size=600x300&maptype=roadmap&markers=color:blue%7Clabel:1%7C{cord1}&markers=color:green%7Clabel:2%7C{cord2}&markers=color:red%7Clabel:3%7C{cord3}&markers=color:yellow%7Clabel:T%7C{tu}
-            &key=AIzaSyDtFJmOZiEyqegfXU2gY_A2AlrFSCl9C2c'''.format(cord1=c1,cord2=c2,cord3=c3,tu=tu)
-
-    bot.send_photo(chat_id=update.message.chat.id, photo=url)
+    manejarCommand(bot, update,"BANELCO")
+    
+def manejarCommand(bot, update, tipoCajero):
+    cajeros = select3Nearest(tipoCajero)
+    if len(cajeros)!=0:
+        update.message.reply_text(armarStringPantalla(cajeros))
+        devolverMapa(cajeros,bot,update)
+        registrarConsulta(cajeros)
+    else:
+        update.message.reply_text("No se encuentran cajeros automáticos cercanos")
 
 def armarStringPantalla(cajeros):
     ret = []
@@ -45,10 +38,13 @@ def armarStringPantalla(cajeros):
     return ''.join(ret)
 
 def select3Nearest(red):
-    return quitarEstimadosVacios(sorted(calcularDistancias(filtrarRed(red)), key=lambda k: k["DISTANCE"]))[:3]
+    return quitarEstimadosVacios(sorted(filtrarMaxDistance(calcularDistancias(filtrarRed(red))), key=lambda k: k["DISTANCE"]))[:3]
 
 def filtrarRed(tipo):
     return list(filter(lambda d: d["RED"]==tipo,list_dic))
+
+def filtrarMaxDistance(lista):
+    return list(filter(lambda d: d["DISTANCE"] <= MAX_METROS_BUSQUEDA/1000, lista))
 
 def quitarEstimadosVacios(lista):
     if os.stat("consultas.json").st_size == 0:    
@@ -66,9 +62,9 @@ def calcularDistancias(lista):
 
 def registrarConsulta(cajeros):
     r = random.randint(0,100)
-    if r < 70: 
+    if r < 70 or len(cajeros)==1: 
         sumarExtraccion(cajeros[0])
-    elif r < 90:
+    elif r < 90 or len(cajeros)==2:
         sumarExtraccion(cajeros[1])
     else:
         sumarExtraccion(cajeros[2])
@@ -81,6 +77,19 @@ def sumarExtraccion(cajero):
     datos[cajero["ID"]] = datos.get(cajero["ID"],0)+1
     with open("consultas.json","w") as new:
         json.dump(datos,new)
+
+def devolverMapa(cajeros,bot,update):
+    markers = ""
+    colores = ["blue","green","red"]
+
+    for idx,c in enumerate(cajeros):
+        latlang = c["LAT"].replace(",",".") + "," + c["LNG"].replace(",",".")
+        markers += "&markers=color:{color}%7Clabel:{id}%7C{cord}".format(color=colores[idx],id=str(idx+1),cord=latlang)
+
+    tuCord = MY_COORD if MY_COORD!="" else ','.join(map(str,geocoder.ip("me").latlng))
+
+    url = "https://maps.googleapis.com/maps/api/staticmap?size=600x400&maptype=roadmap&markers=color:yellow%7Clabel:T%7C{tu}{markers}&key=AIzaSyDtFJmOZiEyqegfXU2gY_A2AlrFSCl9C2c".format(tu=tuCord, markers = markers)
+    bot.send_photo(chat_id=update.message.chat.id, photo=url)
 
 def main():
     updater = Updater(token)
