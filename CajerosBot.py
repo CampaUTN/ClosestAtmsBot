@@ -91,17 +91,12 @@ def main():
     dp.add_handler(CommandHandler("me", me))
     updater.start_polling()
 
-    if os.stat("cajeros.csv").st_size == 0 or horasDesdeModificacion()>HORAS_ENTRE_ACTU:    
+    if os.stat("cajeros.csv").st_size == 0:    
         getCsv()
 
     csvToDic()
 
     updater.idle()
-
-def horasDesdeModificacion():
-    file_mod_time = os.stat("cajeros.csv").st_mtime
-    should_time = time.time() - (30 * 60)
-    return (file_mod_time - should_time) / 60 / 60 * -1
 
 def getCsv():
     r = requests.get("https://data.buenosaires.gob.ar/api/files/cajeros-automaticos.csv/download/csv") 
