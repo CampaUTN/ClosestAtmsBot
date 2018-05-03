@@ -9,7 +9,8 @@ def getCsv():
         f.write(r.content)
 
 def reiniciarConsultas():
-    os.remove("consultas.json")
+    with open("consultas.json","w") as f:
+		json.dump({"0":0},f)
 
 schedule.every(IMPORTAR_CSV_CADA).hours.do(getCsv)
 schedule.every(REINICIAR_CONSULTAS_CADA).hours.do(reiniciarConsultas)

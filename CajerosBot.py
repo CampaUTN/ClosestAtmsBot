@@ -1,6 +1,6 @@
 import telegram
 from telegram.ext import *
-import requests, csv, json, geopy.distance, geocoder, random, os, os.path, time
+import requests, csv, json, geopy.distance, geocoder, random, os, os.path, time, signal
 
 token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
@@ -51,11 +51,10 @@ def filtrarRed(tipo):
     return list(filter(lambda d: d["RED"]==tipo,list_dic))
 
 def quitarEstimadosVacios(lista):
-    try: 
-         datos = json.load(consultas)
-    except ValueError: 
-         datos = {"0":0}
-
+    if os.stat("consultas.json").st_size == 0:    
+        json.dump({"0":0},consultas)
+    consultas.seek(0)
+    datos = json.load(consultas)
     return list(filter(lambda d: datos.get(d["ID"],0)<MAX_EXTRAC ,lista))
 
 def calcularDistancias(lista):
@@ -75,11 +74,10 @@ def registrarConsulta(cajeros):
         sumarExtraccion(cajeros[2])
 
 def sumarExtraccion(cajero):
-    try: 
-         datos = json.load(consultas)
-    except ValueError: 
-         datos = {"0":0}
-    
+    if os.stat("consultas.json").st_size == 0:    
+        json.dump({"0":0},consultas)
+    consultas.seek(0)
+    datos = json.load(consultas)
     datos[cajero["ID"]] = datos.get(cajero["ID"],0)+1
     with open("consultas.json","w") as new:
         json.dump(datos,new)
