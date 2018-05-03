@@ -5,7 +5,7 @@ import requests, csv, json, geopy.distance, geocoder, random, os, os.path, time
 token = '567792160:AAHHkjURiYh5s2GSQm-YzMq7tVdFf-7PLJo'
 list_dic = []
 MAX_EXTRAC = 1000
-MY_COORD = ""
+MY_COORD = "" #Para testear desde otra ubicacion (formato: "-34.581407, -58.440111")
 HORAS_ENTRE_ACTU = 24
 
 consultas = open("consultas.json","a+")
@@ -51,14 +51,15 @@ def filtrarRed(tipo):
     return list(filter(lambda d: d["RED"]==tipo,list_dic))
 
 def quitarEstimadosVacios(lista):
-    if os.stat("consultas.json").st_size == 0:    
-        json.dump({"0":0},consultas)
-    consultas.seek(0)
-    datos = json.load(consultas)
+    try: 
+         datos = json.load(consultas)
+    except ValueError: 
+         datos = {"0":0}
+
     return list(filter(lambda d: datos.get(d["ID"],0)<MAX_EXTRAC ,lista))
 
 def calcularDistancias(lista):
-    myPos = geocoder.ip("me").latlng
+    myPos = MY_COORD if MY_COORD!="" else geocoder.ip("me").latlng
     for cajero in lista:
         posCajero = (float(cajero["LAT"].replace(",",".")), float(cajero["LNG"].replace(",",".") ))
         cajero["DISTANCE"] = geopy.distance.vincenty(myPos, posCajero).km
@@ -74,11 +75,11 @@ def registrarConsulta(cajeros):
         sumarExtraccion(cajeros[2])
 
 def sumarExtraccion(cajero):
-    if os.stat("consultas.json").st_size == 0:    
-        json.dump({"0":0},consultas)
-    consultas.seek(0)
-    datos = json.load(consultas)
-    consultas.seek(0)
+    try: 
+         datos = json.load(consultas)
+    except ValueError: 
+         datos = {"0":0}
+    
     datos[cajero["ID"]] = datos.get(cajero["ID"],0)+1
     with open("consultas.json","w") as new:
         json.dump(datos,new)
