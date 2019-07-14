@@ -36,7 +36,6 @@ psycopg2==2.8.3
 pyasn1==0.4.5
 pyasn1-modules==0.2.5
 pycrypto==2.6.1
-pygobject==3.26.1
 pyliblzma==0.5.3
 pyOpenSSL==17.5.0
 pytz==2019.1
