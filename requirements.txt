@@ -23,7 +23,7 @@ google-cloud==0.34.0
 google-cloud-vision==0.38.0
 googleapis-common-protos==1.6.0
 grpcio==1.22.0
-httplib2==0.13.0
+httplib2==0.19.0
 idna==2.8
 ipaddress==1.0.17
 jsonschema==2.6.0
