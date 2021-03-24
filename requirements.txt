@@ -42,7 +42,7 @@ pytz==2019.1
 pyxdg==0.25
 PyYAML==3.12
 requests==2.22.0
-rsa==4.0
+rsa==4.2
 SecretStorage==2.3.1
 six==1.12.0
 SOAPpy==0.12.22
