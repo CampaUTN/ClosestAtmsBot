@@ -40,7 +40,7 @@ pyliblzma==0.5.3
 pyOpenSSL==17.5.0
 pytz==2019.1
 pyxdg==0.25
-PyYAML==3.12
+PyYAML==5.4
 requests==2.22.0
 rsa==4.0
 SecretStorage==2.3.1
