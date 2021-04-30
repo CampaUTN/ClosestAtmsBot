@@ -48,7 +48,7 @@ six==1.12.0
 SOAPpy==0.12.22
 texttable==0.9.1
 uritemplate==3.0.0
-urllib3==1.25.3
+urllib3==1.25.8
 websocket-client==0.44.0
 whitenoise==4.1.2
 wstools==0.4.3
