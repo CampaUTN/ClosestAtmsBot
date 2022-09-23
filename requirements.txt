@@ -31,7 +31,7 @@ keyring==10.6.0
 keyrings.alt==3.0
 mock==2.0.0
 pbr==3.1.1
-protobuf==3.8.0
+protobuf==3.18.3
 psycopg2==2.8.3
 pyasn1==0.4.5
 pyasn1-modules==0.2.5
